@@ -13,7 +13,7 @@ struct RollingMean {
     double mean;
 };
 
-static u32 limit = 0;
+static u32 g_limit = 0;
 
 // checks access time to the line
 bool get(const void *line)
@@ -38,7 +38,7 @@ bool get(const void *line)
         : "rbx", "rcx", "rdx", "rdi"
     );
 
-    return measure + limit < 2 * limit;
+    return measure + g_limit < 2 * g_limit;
 }
 
 static
@@ -95,8 +95,8 @@ void measure_access_times(void)
         mean.mean += delta / mean.count; 
     }
 
-    limit = (int) mean.mean;
-    printf("fr limit: %d\n", limit);
+    g_limit = (int) mean.mean;
+    printf("fr limit: %d\n", g_limit);
 
     free(_line);
 }

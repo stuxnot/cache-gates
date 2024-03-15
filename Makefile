@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -Wall -Wextra -O0 -masm=intel -march=native
 INCLUDES := -I.
-objects := build/flush.o build/gates.o build/eval.o build/main.o build/cache_alloc.o
+objects := build/flush.o build/gates.o build/eval.o build/main.o build/bitmap.o build/cache_line_alloc.o
 
 run: build/main
 	./build/main

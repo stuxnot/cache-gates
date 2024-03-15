@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 #include "inc/flush.h"
-#include "inc/cache_alloc.h"
+#include "inc/cache_line_alloc.h"
 #include "inc/gates.h"
 #include "inc/eval.h"
 
@@ -18,7 +18,7 @@ int main(int av, char** ac) {
 
     measure_access_times();
 
-    init_cache_alloc(21 + 6);
+    CacheLine_arena_allocator(32, 4160);
 
     printf("NOT:\n");
     evaluate_not();
@@ -59,5 +59,5 @@ int main(int av, char** ac) {
     printf("NOR (vec2):\n");
     evaluate_vec2(nor_vec2_impl, bool_nor);
 
-    free_cache_alloc();
+    CacheLine_free_allocator();
 }

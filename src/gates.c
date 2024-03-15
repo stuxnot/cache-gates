@@ -1,6 +1,6 @@
 #include "inc/gates.h"
 
-#include "inc/cache_alloc.h"
+#include "inc/cache_line_alloc.h"
 
 void set(void *line, bool value) {
     asm volatile (
@@ -197,7 +197,7 @@ void nor_vec2_impl(void *out1, void *out2, void *in1, void* in2) {
 }
 
 void and_impl(void *out, void *in1, void *in2) {
-    void *flush_line = get_cache_line();
+    void *flush_line = CacheLine_alloc();
     set(flush_line, false);
 
     asm volatile (
@@ -226,11 +226,11 @@ void and_impl(void *out, void *in1, void *in2) {
         : "rax", "rbx", "r11"
     );
 
-    free_cache_line(flush_line);
+    CacheLine_free(flush_line);
 }
 
 void or_impl(void *out, void *in1, void *in2) {
-    void *flush_line = get_cache_line();
+    void *flush_line = CacheLine_alloc();
     set(flush_line, false);
 
     asm volatile (
@@ -260,17 +260,17 @@ void or_impl(void *out, void *in1, void *in2) {
         : "rax", "rbx", "rcx", "r11"
     );
 
-    free_cache_line(flush_line);
+    CacheLine_free(flush_line);
 }
 
 
 // Uses a hand-crafted approach instead of using nand gates,
 // and results in a higher accuracy.
 void xor_impl(void *out, void *in1, void *in2) {
-    void *line1 = get_cache_line();
-    void *line2 = get_cache_line();
-    void *line3 = get_cache_line();
-    void *line4 = get_cache_line();
+    void *line1 = CacheLine_alloc();
+    void *line2 = CacheLine_alloc();
+    void *line3 = CacheLine_alloc();
+    void *line4 = CacheLine_alloc();
 
     set(line1, false);
     set(line2, false);
@@ -332,18 +332,18 @@ void xor_impl(void *out, void *in1, void *in2) {
         : "rax", "rbx", "rcx", "r11"
     );
 
-    free_cache_line(line4);
-    free_cache_line(line3);
-    free_cache_line(line2);
-    free_cache_line(line1);
+    CacheLine_free(line1);
+    CacheLine_free(line2);
+    CacheLine_free(line3);
+    CacheLine_free(line4);
 }
 
 // Here is an approach using nand:
 void xor_impl_nand(void *out, void *in1, void *in2) {
-    void *line1 = get_cache_line();
-    void *line2 = get_cache_line();
-    void *line3 = get_cache_line();
-    void *line4 = get_cache_line();
+    void *line1 = CacheLine_alloc();
+    void *line2 = CacheLine_alloc();
+    void *line3 = CacheLine_alloc();
+    void *line4 = CacheLine_alloc();
 
     set(line1, false);
     set(line2, false);
@@ -366,14 +366,14 @@ void xor_impl_nand(void *out, void *in1, void *in2) {
 
     nand_impl(out, line1, line2);
 
-    free_cache_line(line4);
-    free_cache_line(line3);
-    free_cache_line(line2);
-    free_cache_line(line1);
+    CacheLine_free(line1);
+    CacheLine_free(line2);
+    CacheLine_free(line3);
+    CacheLine_free(line4);
 }
 
 void not_with_restore(void *out, void *in) {
-    void *tmp1 = get_cache_line();
+    void *tmp1 = CacheLine_alloc();
 
     set(tmp1, false);
     set(out, false);
@@ -383,13 +383,13 @@ void not_with_restore(void *out, void *in) {
     set(in, false);
     not_impl(in, tmp1);
     
-    free_cache_line(tmp1);
+    CacheLine_free(tmp1);
 }
 
 
 void or_with_restore(void *out, void *in1, void *in2) {
-    void *tmp1 = get_cache_line();
-    void *tmp2 = get_cache_line();
+    void *tmp1 = CacheLine_alloc();
+    void *tmp2 = CacheLine_alloc();
 
     set(out, false);
 
@@ -398,13 +398,13 @@ void or_with_restore(void *out, void *in1, void *in2) {
 
     nand_impl(out, tmp1, tmp2);
 
-    free_cache_line(tmp2);
-    free_cache_line(tmp1);
+    CacheLine_free(tmp1);
+    CacheLine_free(tmp2);
 }
 
 void and_with_restore(void *out, void *in1, void *in2) {
-    void *tmp1 = get_cache_line();
-    void *tmp2 = get_cache_line();
+    void *tmp1 = CacheLine_alloc();
+    void *tmp2 = CacheLine_alloc();
 
     set(out, false);
 
@@ -413,13 +413,13 @@ void and_with_restore(void *out, void *in1, void *in2) {
 
     nor_impl(out, tmp1, tmp2);
 
-    free_cache_line(tmp2);
-    free_cache_line(tmp1);
+    CacheLine_free(tmp1);
+    CacheLine_free(tmp2);
 }
 
 void or_accumulate(void *acc, void *in) {
-    void *tmp1 = get_cache_line();
-    void *tmp2 = get_cache_line();
+    void *tmp1 = CacheLine_alloc();
+    void *tmp2 = CacheLine_alloc();
 
     not_with_restore(tmp1, in);
 
@@ -429,13 +429,13 @@ void or_accumulate(void *acc, void *in) {
     set(acc, false);
     nand_impl(acc, tmp1, tmp2);
 
-    free_cache_line(tmp2);
-    free_cache_line(tmp1);
+    CacheLine_free(tmp1);
+    CacheLine_free(tmp2);
 }
 
 void and_accumulate(void *acc, void *in) {
-    void *tmp1 = get_cache_line();
-    void *tmp2 = get_cache_line();
+    void *tmp1 = CacheLine_alloc();
+    void *tmp2 = CacheLine_alloc();
 
     not_with_restore(tmp1, in);
 
@@ -445,6 +445,6 @@ void and_accumulate(void *acc, void *in) {
     set(acc, false);
     nor_impl(acc, tmp1, tmp2);
 
-    free_cache_line(tmp2);
-    free_cache_line(tmp1);
+    CacheLine_free(tmp1);
+    CacheLine_free(tmp2);
 }

@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define MEASUREMENTS 10000
-
 typedef void (*cache_gate)(void*, void*, void*);
 typedef bool (*gate)(bool, bool);
 typedef void (*cache_gate_vec)(void**, void*, void*);
