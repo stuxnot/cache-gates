@@ -1,15 +1,30 @@
 CC := gcc
 CFLAGS := -Wall -Wextra -O0 -masm=intel -march=native
 INCLUDES := -I.
-objects := build/flush.o build/gates.o build/eval.o build/main.o build/bitmap.o build/cache_line_alloc.o
+objects := build/flush.o build/gates.o build/eval.o build/bitmap.o build/cache_line_alloc.o
 
-run: build/main
-	./build/main
+targets := build/main
+test_targets := build/alloc-test build/bitmap-test
 
-build/main: $(objects)
+target_objs := $(addsuffix .o, $(targets))
+test_objs := $(addsuffix .o, $(test_targets))
+
+run: $(targets)
+	@for f in $^; do echo "./$$f"; "./$$f"; done
+
+test: $(test_targets)
+	@for f in $^; do echo "./$$f"; "./$$f"; done
+
+$(targets): build/%: build/%.o $(objects)
 	$(CC) -o $@ $^
 
-$(objects): build/%.o: src/%.c | build
+$(test_targets): build/%: build/%.o $(objects)
+	$(CC) -o $@ $^
+
+$(test_objs): build/%.o: tests/%.c | build
+	$(CC) $(CFLAGS) $(INCLUDES) $< -c -o $@
+
+$(objects) $(target_objs): build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) $(INCLUDES) $< -c -o $@ 
 
 build:
