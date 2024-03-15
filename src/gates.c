@@ -265,8 +265,7 @@ void or_impl(void *out, void *in1, void *in2) {
 }
 
 
-// Uses a hand-crafted approach instead of using nand gates,
-// and results in a higher accuracy.
+// Uses a hand-crafted approach instead of using nand gates
 void xor_impl(void *out, void *in1, void *in2) {
     void *line1 = CacheLine_alloc();
     void *line2 = CacheLine_alloc();
